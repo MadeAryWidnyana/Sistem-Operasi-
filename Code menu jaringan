@@ -1,0 +1,56 @@
+#!/bin/bash
+
+while true; do
+    clear
+    echo ".................MENU JARINGAN.................."
+    echo "1. Tampilkan Menu Jaringan"
+    echo "2. Keluar"
+    echo -n "pilih opsi (1 dan 2) : "
+    read opsi
+
+    if [[ "$opsi" == "1" ]]; then
+        echo "proses on the way =========="
+
+        # Alamat IP lokal
+        ip addr show enp0s3 | grep 'inet ' | awk '{ print "alamat IP lokal: " $2 }'
+
+        # Gateway
+        gateway=$( ip route | grep default | awk '{print $3}' )
+        echo "gateway : $gateway"
+
+        # Netmask
+        netmask=$( ipcalc $(hostname -I | awk '{print $1}') | grep Netmask | awk '{print $2}' )
+        echo "netmask : $netmask"
+
+        # DNS
+        dns=$( nmcli dev show | grep 'IP4.DNS' | awk '{print $2}' | paste -sd "," - )
+        echo "DNS SERVER (s) : $dns"
+
+        # Cek koneksi internet
+        if ping -q -c 1 -W 1 8.8.8.8 > /dev/null; then
+            echo -e "\e[32msudah terkoneksi ke internet\e[0m"
+        else
+            echo -e "\e[31mlihat lagi koneksi\e[0m"
+        fi
+
+        # Status LAN/WIFI
+        echo "Status koneksi LAN/WIFI : "
+        nmcli dev status
+
+        # Lokasi IP publik
+        lokasi=$(curl -s ipinfo.io/json | jq -r '.city + ", " + .region + ", " + .country' 2>/dev/null)
+        if [ -n "$lokasi" ]; then
+            echo "lokasi IP : $lokasi"
+        fi
+
+        read -p "tekan enter untuk kembali"
+
+    elif [[ "$opsi" == "2" ]]; then
+        echo "keluar dari program"
+        sleep 1
+        break
+    else
+        echo "angka menu tidak valid"
+        sleep 1
+    fi
+done
